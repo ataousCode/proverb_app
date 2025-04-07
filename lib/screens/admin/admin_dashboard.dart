@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../models/proverb.dart';
-import '../../models/category.dart';
 import '../../services/proverb_service.dart';
 import '../../utils/helpers.dart';
 import 'add_proverb_screen.dart';
@@ -9,6 +7,8 @@ import 'add_category_screen.dart';
 import 'manage_categories_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
+  const AdminDashboard({super.key});
+
   @override
   _AdminDashboardState createState() => _AdminDashboardState();
 }
@@ -19,7 +19,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Admin Dashboard')),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(

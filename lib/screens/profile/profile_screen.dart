@@ -1,12 +1,11 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
-import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/error_dialog.dart';
 import '../../utils/helpers.dart';
-import 'favorites_screen.dart';
+import 'reviews_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -19,210 +18,254 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context);
+    return FutureBuilder(
+      future: context.read<AuthService>().getUserDetails(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        }
 
-    return Scaffold(
-      appBar: AppBar(title: Text('Profile')),
-      body: FutureBuilder(
-        future: authService.getUserDetails(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error loading profile'));
+        }
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error loading profile: ${snapshot.error}'),
-            );
-          }
+        final user = snapshot.data;
+        if (user == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _forceSignOut(context);
+          });
+          return Center(child: CircularProgressIndicator());
+        }
 
-          final user = snapshot.data;
-          if (user == null) {
-            // Handle no user - should redirect to login
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _forceSignOut(context);
-            });
-
-            return Center(child: Text('User not found. Please login again.'));
-          }
-
-          return SingleChildScrollView(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: 20),
-                // Profile avatar
-                CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Theme.of(context).primaryColor,
-                  child: Text(
-                    user.name.isNotEmpty
-                        ? user.name.substring(0, 1).toUpperCase()
-                        : '?',
-                    style: TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              // Profile header with gradient background
+              // Profile header with compact design
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.only(top: 20, bottom: 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Theme.of(context).primaryColor, Color(0xFF8E2DE2)],
+                  ),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24),
                   ),
                 ),
-                SizedBox(height: 24),
-                Text(
-                  user.name,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  user.email,
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                ),
-                if (user.isAdmin)
-                  Container(
-                    margin: EdgeInsets.only(top: 8),
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[100],
-                      borderRadius: BorderRadius.circular(12),
+                child: Column(
+                  children: [
+                    // Simple avatar without borders
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.white,
+                      child: Text(
+                        user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      ),
                     ),
-                    child: Text(
-                      'Admin',
+                    SizedBox(height: 12),
+                    // User name
+                    Text(
+                      user.name,
                       style: TextStyle(
-                        color: Colors.blue[800],
-                        fontWeight: FontWeight.w500,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                  ),
-                SizedBox(height: 40),
-
-                // Settings options
-                _buildSettingsItem(
-                  context,
-                  icon: Icons.favorite,
-                  title: 'My Favorites',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FavoritesScreen(),
+                    SizedBox(height: 4),
+                    // User email
+                    Text(
+                      user.email,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.9),
                       ),
-                    );
-                  },
+                    ),
+                    if (user.isAdmin) SizedBox(height: 10),
+                    if (user.isAdmin)
+                      // Admin badge
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Admin',
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                _buildSettingsItem(
-                  context,
-                  icon: Icons.notifications,
-                  title: 'Notifications',
-                  onTap: () {
-                    Helpers.showSnackBar(
+              ),
+              // Settings options
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Reviews option
+                    _buildSettingTile(
                       context,
-                      'Notifications will be available in the next update',
-                    );
-                  },
-                ),
-                _buildSettingsItem(
-                  context,
-                  icon: Icons.dark_mode,
-                  title: 'Dark Mode',
-                  onTap: () {
-                    // This handles tap on the entire row
-                    setState(() {
-                      _isDarkMode = !_isDarkMode;
-                    });
-                    Helpers.showSnackBar(
-                      context,
-                      'Theme change will be available in the next update',
-                    );
-                  },
-                  trailing: Switch(
-                    value: _isDarkMode,
-                    onChanged: (value) {
-                      setState(() {
-                        _isDarkMode = value;
-                      });
-                      Helpers.showSnackBar(
-                        context,
-                        'Theme change will be available in the next update',
-                      );
-                    },
-                    activeColor: Theme.of(context).primaryColor,
-                  ),
-                ),
-                _buildSettingsItem(
-                  context,
-                  icon: Icons.language,
-                  title: 'Language',
-                  subtitle: 'English',
-                  onTap: () {
-                    Helpers.showSnackBar(
-                      context,
-                      'Language options will be available in the next update',
-                    );
-                  },
-                ),
-                _buildSettingsItem(
-                  context,
-                  icon: Icons.help_outline,
-                  title: 'Help & Support',
-                  onTap: () {
-                    Helpers.showSnackBar(
-                      context,
-                      'Help & Support will be available in the next update',
-                    );
-                  },
-                ),
-                _buildSettingsItem(
-                  context,
-                  icon: Icons.info_outline,
-                  title: 'About',
-                  onTap: () {
-                    _showAboutDialog();
-                  },
-                ),
-                SizedBox(height: 40),
+                      icon: Icons.star,
+                      iconColor: Colors.amber,
+                      title: 'My Reviews',
+                      subtitle: 'Rate and review the app',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ReviewsScreen(),
+                          ),
+                        );
+                      },
+                    ),
 
-                // Logout button
-                CustomButton(
-                  text: 'Log Out',
-                  isLoading: _isLoading,
-                  onPressed: () => _signOut(context),
-                  icon: Icons.logout,
-                ),
-                SizedBox(height: 16),
+                    // Dark mode option
+                    _buildSettingTile(
+                      context,
+                      icon: Icons.dark_mode,
+                      iconColor: Colors.purple,
+                      title: 'Dark Mode',
+                      trailing: Switch(
+                        value: _isDarkMode,
+                        onChanged: (value) {
+                          setState(() {
+                            _isDarkMode = value;
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Theme setting coming soon'),
+                            ),
+                          );
+                        },
+                        activeColor: Theme.of(context).primaryColor,
+                      ),
+                      onTap: () {
+                        setState(() {
+                          _isDarkMode = !_isDarkMode;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Theme setting coming soon')),
+                        );
+                      },
+                    ),
 
-                // Delete account button
-                TextButton(
-                  onPressed: () => _showDeleteAccountDialog(context),
-                  child: Text(
-                    'Delete Account',
-                    style: TextStyle(color: Colors.red),
-                  ),
+                    // Language option
+                    _buildSettingTile(
+                      context,
+                      icon: Icons.language,
+                      iconColor: Colors.green,
+                      title: 'Language',
+                      subtitle: 'English',
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Language options coming soon'),
+                          ),
+                        );
+                      },
+                    ),
+
+                    // About option
+                    _buildSettingTile(
+                      context,
+                      icon: Icons.info_outline,
+                      iconColor: Colors.blue,
+                      title: 'About',
+                      onTap: () => _showAboutDialog(),
+                    ),
+
+                    SizedBox(height: 24),
+
+                    // Logout button
+                    ElevatedButton.icon(
+                      onPressed: () => _signOut(context),
+                      icon: Icon(Icons.logout),
+                      label: Text('Log Out'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        minimumSize: Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 16),
+
+                    // Delete account button
+                    TextButton.icon(
+                      onPressed: () => _showDeleteAccountDialog(context),
+                      icon: Icon(Icons.delete_forever, color: Colors.red),
+                      label: Text(
+                        'Delete Account',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 24),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildSettingsItem(
+  Widget _buildSettingTile(
     BuildContext context, {
     required IconData icon,
+    required Color iconColor,
     required String title,
     String? subtitle,
-    required VoidCallback onTap,
     Widget? trailing,
+    required VoidCallback onTap,
   }) {
-    return Card(
+    return Container(
       margin: EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).primaryColor),
-        title: Text(title, style: TextStyle(fontWeight: FontWeight.w500)),
+        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        leading: Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: iconColor),
+        ),
+        title: Text(title, style: TextStyle(fontWeight: FontWeight.w600)),
         subtitle: subtitle != null ? Text(subtitle) : null,
         trailing: trailing ?? Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -261,15 +304,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Updated sign out method
   Future<void> _signOut(BuildContext context) async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      await context.read<AuthService>().signOut(context);
-      // No need to navigate here as it's handled in the service
+      final authService = Provider.of<AuthService>(context, listen: false);
+      await authService.signOut(context);
     } catch (e) {
       showDialog(
         context: context,
@@ -284,13 +326,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Force sign out if user data can't be found
   Future<void> _forceSignOut(BuildContext context) async {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       await authService.signOut(context);
 
-      // Show message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Session expired. Please login again.')),
       );
@@ -335,7 +375,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       await authService.deleteAccount();
-      // AuthWrapper will handle navigation
+      await authService.signOut(context);
     } catch (e) {
       showDialog(
         context: context,

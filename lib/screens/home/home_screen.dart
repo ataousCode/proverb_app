@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proverbs/screens/auth/login_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/proverb.dart';
@@ -9,8 +10,8 @@ import '../../services/proverb_service.dart';
 import '../../services/user_prefs_service.dart';
 import '../../widgets/proverb/proverb_card.dart';
 import '../../widgets/proverb/proverb_swiper.dart';
-import '../profile/profile_screen.dart';
 import '../admin/admin_dashboard.dart';
+import '../profile/profile_screen.dart';
 import 'proverb_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -41,54 +42,70 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if user is authenticated
+    final authService = Provider.of<AuthService>(context, listen: false);
+    if (!authService.isAuthenticated) {
+      // Redirect to login on next frame
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => LoginScreen()),
+          (route) => false,
+        );
+      });
+
+      // Show loading while redirecting
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(_currentIndex == 0 ? 'Proverbs' : 'Favorites'),
+        title: Text(_getAppBarTitle()),
         actions: [
-          // View toggle button
-          IconButton(
-            icon: Icon(_viewAsList ? Icons.view_carousel : Icons.view_list),
-            onPressed: () {
-              setState(() {
-                _viewAsList = !_viewAsList;
-              });
-            },
-          ),
-          if (_currentUser?.isAdmin == true)
+          // View toggle button - only show on Proverbs tab
+          if (_currentIndex == 0)
             IconButton(
-              icon: Icon(Icons.admin_panel_settings),
+              icon: Icon(_viewAsList ? Icons.view_carousel : Icons.view_list),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AdminDashboard()),
-                );
+                setState(() {
+                  _viewAsList = !_viewAsList;
+                });
               },
             ),
-          IconButton(
-            icon: Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ProfileScreen()),
-              );
+          // if (_currentUser?.isAdmin == true)
+          //   IconButton(
+          //     icon: Icon(Icons.admin_panel_settings),
+          //     onPressed: () {
+          //       Navigator.push(
+          //         context,
+          //         MaterialPageRoute(builder: (context) => AdminDashboard()),
+          //       );
+          //     },
+          //   ),
+          // Profile icon removed from here
+          // Add logout option in popup menu
+          PopupMenuButton(
+            itemBuilder:
+                (context) => [
+                  PopupMenuItem(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout, color: Colors.red),
+                        SizedBox(width: 8),
+                        Text('Logout'),
+                      ],
+                    ),
+                  ),
+                ],
+            onSelected: (value) {
+              if (value == 'logout') {
+                _signOut(context);
+              }
             },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Categories horizontal list - only show on Proverbs tab
-          if (_currentIndex == 0) _buildCategoriesList(),
-
-          // Proverbs list (main content)
-          Expanded(
-            child:
-                _currentIndex == 0
-                    ? _buildProverbsContent()
-                    : _buildFavoritesContent(),
-          ),
-        ],
-      ),
+      body: _getBody(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -96,6 +113,13 @@ class _HomeScreenState extends State<HomeScreen> {
             _currentIndex = index;
           });
         },
+        type: BottomNavigationBarType.fixed, // Keeps the colors consistent
+        backgroundColor:
+            Theme.of(context).primaryColor, // Use your app's primary color
+        selectedItemColor: Colors.white, // White color for selected items
+        unselectedItemColor:
+            Colors.white70, // Slightly transparent white for unselected
+        elevation: 8, // Add some elevation for a shadow effect
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.format_quote),
@@ -105,9 +129,68 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.favorite),
             label: 'Favorites',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          // Only show admin dashboard tab for admin users
+          if (_currentUser?.isAdmin == true)
+            BottomNavigationBarItem(
+              icon: Icon(Icons.admin_panel_settings),
+              label: 'Dashboard',
+            ),
         ],
       ),
     );
+  }
+
+  String _getAppBarTitle() {
+    switch (_currentIndex) {
+      case 0:
+        return 'Proverbs';
+      case 1:
+        return 'Favorites';
+      case 2:
+        return 'Profile';
+      case 3:
+        // Only shown for admin users
+        return 'Admin Dashboard';
+      default:
+        return 'Proverbs App';
+    }
+  }
+
+  Widget _getBody() {
+    switch (_currentIndex) {
+      case 0:
+        return _buildProverbsTab();
+      case 1:
+        return _buildFavoritesTab();
+      case 2:
+        return ProfileScreen();
+      case 3:
+        // Only shown for admin users
+        if (_currentUser?.isAdmin == true) {
+          return AdminDashboard();
+        } else {
+          return _buildProverbsTab();
+        }
+      default:
+        return _buildProverbsTab();
+    }
+  }
+
+  Widget _buildProverbsTab() {
+    return Column(
+      children: [
+        // Categories horizontal list
+        _buildCategoriesList(),
+
+        // Proverbs list (main content)
+        Expanded(child: _buildProverbsContent()),
+      ],
+    );
+  }
+
+  Widget _buildFavoritesTab() {
+    return _buildFavoritesContent();
   }
 
   Widget _buildCategoriesList() {
@@ -383,38 +466,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildErrorWidget(String errorMessage) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, color: Colors.red, size: 60),
-            SizedBox(height: 16),
-            Text(
-              'Something went wrong',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Could not load data. Please try again later.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[700]),
-            ),
-            SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  // Just setting state will rebuild and retry
-                });
-              },
-              icon: Icon(Icons.refresh),
-              label: Text('Try Again'),
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _signOut(BuildContext context) async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      await authService.signOut(context);
+      // Navigation is handled in the authService.signOut method
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error signing out: $e')));
+    }
   }
 }
