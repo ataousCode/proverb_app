@@ -1,4 +1,5 @@
 # proverbs
+![Capture d’écran 2025-04-07 à 7 13 33 PM](https://github.com/user-attachments/assets/a2a6ed3a-5d7f-4699-9455-d99b2cf97f3a)
 
 A new Flutter project.
 
