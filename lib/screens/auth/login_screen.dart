@@ -1,16 +1,19 @@
+// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_textfield.dart';
-import '../../widgets/common/error_dialog.dart';
 import '../../utils/validators.dart';
 import '../home/home_screen.dart';
 import 'register_screen.dart';
 import 'reset_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -38,36 +41,27 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Get the auth service
       final authService = Provider.of<AuthService>(context, listen: false);
-
-      // Try to sign in
       await authService.signIn(
         _emailController.text.trim(),
         _passwordController.text,
       );
-
-      // Check if we're successfully logged in
       if (authService.currentUser != null) {
-        // Navigate to home screen directly
         Navigator.of(
           context,
         ).pushReplacement(MaterialPageRoute(builder: (_) => HomeScreen()));
       } else {
-        // Handle the case where login didn't throw an error but also didn't log in
         setState(() {
           _errorMessage = 'Login failed. Please try again.';
           _isLoading = false;
         });
       }
     } on FirebaseAuthException catch (e) {
-      // Handle Firebase Auth specific errors
       setState(() {
         _errorMessage = _getMessageFromErrorCode(e.code);
         _isLoading = false;
       });
     } catch (e) {
-      // Handle any other errors
       setState(() {
         _errorMessage = e.toString();
         _isLoading = false;
@@ -108,9 +102,8 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(height: 40),
-                // App logo or illustration
                 Image.asset(
-                  'assets/images/login_illustration.png',
+                  'assets/images/1.jpg',
                   height: 180,
                   errorBuilder: (context, error, stackTrace) {
                     return Icon(
@@ -221,16 +214,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
-                // Debug button for testing
-                // SizedBox(height: 32),
-                // OutlinedButton(
-                //   onPressed: () {
-                //     Navigator.of(context).pushReplacement(
-                //       MaterialPageRoute(builder: (_) => HomeScreen()),
-                //     );
-                //   },
-                //   child: Text('Debug: Go to Home'),
-                // ),
               ],
             ),
           ),

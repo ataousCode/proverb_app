@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -68,10 +70,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                         );
                       }),
                     ),
-
                     SizedBox(height: 16),
-
-                    // Review text field
                     TextField(
                       controller: _reviewController,
                       decoration: InputDecoration(
@@ -82,20 +81,17 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                       ),
                       maxLines: 3,
                     ),
-
                     SizedBox(height: 16),
-
-                    // Submit button
                     Center(
                       child: ElevatedButton(
                         onPressed: _submitReview,
-                        child: Text('Submit Review'),
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 12,
+                            horizontal: 100,
+                            vertical: 10,
                           ),
                         ),
+                        child: Text('Submit Review'),
                       ),
                     ),
                   ],
@@ -241,9 +237,12 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         _selectedRating = 5;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Review submitted successfully')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Review submitted successfully'),
+          backgroundColor: const Color.fromARGB(255, 67, 46, 70),
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -255,9 +254,12 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     try {
       await _reviewService.deleteReview(reviewId);
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Review deleted')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Review deleted'),
+          backgroundColor: const Color.fromARGB(255, 55, 0, 62),
+        ),
+      );
     } catch (e) {
       ScaffoldMessenger.of(
         context,

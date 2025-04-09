@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/proverb.dart';
@@ -10,7 +12,7 @@ class ProverbDetailScreen extends StatelessWidget {
   final UserPrefsService _userPrefsService = UserPrefsService();
   final ProverbService _proverbService = ProverbService();
 
-  ProverbDetailScreen({required this.proverb});
+  ProverbDetailScreen({super.key, required this.proverb});
 
   @override
   Widget build(BuildContext context) {
@@ -103,22 +105,14 @@ class ProverbDetailScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-
                   SizedBox(height: 32),
-
-                  // Action buttons
                   ProverbActions(proverbId: proverb.id),
-
                   SizedBox(height: 32),
-
-                  // More from this category
                   Text(
                     'More from this category',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 16),
-
-                  // Related proverbs
                   _buildRelatedProverbs(context),
                 ],
               ),

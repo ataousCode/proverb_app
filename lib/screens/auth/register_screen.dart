@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
@@ -5,9 +7,10 @@ import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_textfield.dart';
 import '../../widgets/common/error_dialog.dart';
 import '../../utils/validators.dart';
-import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
@@ -42,7 +45,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _emailController.text.trim(),
         _passwordController.text,
       );
-      // Navigate back to login screen after successful registration
       Navigator.pop(context);
     } catch (e) {
       showDialog(
@@ -61,7 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Create Account'), elevation: 0),
+      //appBar: AppBar(title: Text('Create Account'), elevation: 0),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.all(24),
@@ -71,11 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(height: 20),
-                // App logo or illustration
-                // Image.asset(
-                //   'assets/images/register_illustration.png',
-                //   height: 150,
-                // ),
+                Image.asset('assets/images/1.jpg', height: 150),
                 SizedBox(height: 30),
                 Text(
                   'Join Proverbs',

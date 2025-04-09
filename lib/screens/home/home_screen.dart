@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'package:proverbs/screens/auth/login_screen.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +17,8 @@ import '../profile/profile_screen.dart';
 import 'proverb_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -25,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _selectedCategoryId;
   UserModel? _currentUser;
   int _currentIndex = 0;
-  bool _viewAsList = true; // Toggle between list and swiper view
+  bool _viewAsList = true;
 
   @override
   void initState() {
@@ -52,7 +56,6 @@ class _HomeScreenState extends State<HomeScreen> {
           (route) => false,
         );
       });
-
       // Show loading while redirecting
       return Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -71,18 +74,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 });
               },
             ),
-          // if (_currentUser?.isAdmin == true)
-          //   IconButton(
-          //     icon: Icon(Icons.admin_panel_settings),
-          //     onPressed: () {
-          //       Navigator.push(
-          //         context,
-          //         MaterialPageRoute(builder: (context) => AdminDashboard()),
-          //       );
-          //     },
-          //   ),
-          // Profile icon removed from here
-          // Add logout option in popup menu
           PopupMenuButton(
             itemBuilder:
                 (context) => [
@@ -113,13 +104,11 @@ class _HomeScreenState extends State<HomeScreen> {
             _currentIndex = index;
           });
         },
-        type: BottomNavigationBarType.fixed, // Keeps the colors consistent
-        backgroundColor:
-            Theme.of(context).primaryColor, // Use your app's primary color
-        selectedItemColor: Colors.white, // White color for selected items
-        unselectedItemColor:
-            Colors.white70, // Slightly transparent white for unselected
-        elevation: 8, // Add some elevation for a shadow effect
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Theme.of(context).primaryColor,
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.white70,
+        elevation: 8,
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.format_quote),
@@ -180,10 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildProverbsTab() {
     return Column(
       children: [
-        // Categories horizontal list
         _buildCategoriesList(),
-
-        // Proverbs list (main content)
         Expanded(child: _buildProverbsContent()),
       ],
     );
@@ -399,7 +385,6 @@ class _HomeScreenState extends State<HomeScreen> {
         if (favSnapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         }
-
         final favoriteIds = favSnapshot.data ?? [];
 
         if (favoriteIds.isEmpty) {
@@ -470,7 +455,6 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
       await authService.signOut(context);
-      // Navigation is handled in the authService.signOut method
     } catch (e) {
       ScaffoldMessenger.of(
         context,

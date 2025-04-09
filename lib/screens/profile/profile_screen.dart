@@ -1,6 +1,8 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:proverbs/config/app_colors.dart';
+import 'package:proverbs/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/common/error_dialog.dart';
@@ -123,7 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildSettingTile(
                       context,
                       icon: Icons.star,
-                      iconColor: Colors.amber,
+                      iconColor: AppColors.primary,
                       title: 'My Reviews',
                       subtitle: 'Rate and review the app',
                       onTap: () {
@@ -142,29 +144,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       icon: Icons.dark_mode,
                       iconColor: Colors.purple,
                       title: 'Dark Mode',
-                      trailing: Switch(
-                        value: _isDarkMode,
-                        onChanged: (value) {
-                          setState(() {
-                            _isDarkMode = value;
-                          });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Theme setting coming soon'),
-                            ),
+                      trailing: Consumer<ThemeProvider>(
+                        builder: (context, themeProvider, _) {
+                          return Switch(
+                            value: themeProvider.isDarkMode,
+                            onChanged: (_) {
+                              themeProvider.toggleTheme();
+                            },
+                            activeColor: Theme.of(context).primaryColor,
                           );
                         },
-                        activeColor: Theme.of(context).primaryColor,
                       ),
                       onTap: () {
-                        setState(() {
-                          _isDarkMode = !_isDarkMode;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Theme setting coming soon')),
-                        );
+                        // Toggle theme on tile tap too
+                        Provider.of<ThemeProvider>(
+                          context,
+                          listen: false,
+                        ).toggleTheme();
                       },
                     ),
+                    // _buildSettingTile(
+                    //   context,
+                    //   icon: Icons.dark_mode,
+                    //   iconColor: Colors.purple,
+                    //   title: 'Dark Mode',
+                    //   trailing: Switch(
+                    //     value: _isDarkMode,
+                    //     onChanged: (value) {
+                    //       setState(() {
+                    //         _isDarkMode = value;
+                    //       });
+                    //       ScaffoldMessenger.of(context).showSnackBar(
+                    //         SnackBar(
+                    //           content: Text('Theme setting coming soon'),
+                    //         ),
+                    //       );
+                    //     },
+                    //     activeColor: Theme.of(context).primaryColor,
+                    //   ),
+                    //   onTap: () {
+                    //     setState(() {
+                    //       _isDarkMode = !_isDarkMode;
+                    //     });
+                    //     ScaffoldMessenger.of(context).showSnackBar(
+                    //       SnackBar(content: Text('Theme setting coming soon')),
+                    //     );
+                    //   },
+                    // ),
 
                     // Language option
                     _buildSettingTile(
@@ -241,7 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -335,7 +361,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         SnackBar(content: Text('Session expired. Please login again.')),
       );
     } catch (e) {
-      print('Error during force sign out: $e');
+      //print('Error during force sign out: $e');
     }
   }
 

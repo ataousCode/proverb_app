@@ -16,19 +16,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'title': 'Welcome to Proverbs',
       'description':
           'Discover wisdom from around the world with our curated collection of proverbs.',
-      'image': 'assets/images/onboarding1.png',
+      'image': 'assets/images/1.jpg',
     },
     {
       'title': 'Explore Categories',
       'description':
           'Browse proverbs by categories like Love, Wisdom, Success, and more.',
-      'image': 'assets/images/onboarding2.png',
+      'image': 'assets/images/1.jpg',
     },
     {
       'title': 'Save Your Favorites',
       'description':
           'Mark proverbs as favorites, share them with friends, and learn from the wisdom of ages.',
-      'image': 'assets/images/onboarding3.png',
+      'image': 'assets/images/1.jpg',
     },
   ];
 
